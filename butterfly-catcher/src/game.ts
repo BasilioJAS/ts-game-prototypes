@@ -187,7 +187,7 @@ export class ButterflyCatcherGame {
           y: (Math.random() - 0.5) * 100,
         },
         color: type.color,
-        value: Math.floor(Math.random() * 10) + 5,
+        value: 100 + Math.floor(Math.random() * 50),
         caught: false,
       };
       this.butterflies.push(butterfly);
