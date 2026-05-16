@@ -118,7 +118,6 @@ export class ButterflyCatcherGame {
         this.shop = new ShopSystem(this.currencies);
         this.adReward = new AdRewardSystem(this.currencies);
         this.menu = new MenuSystem(() => this.startGame(), () => Array.from(this.encyclopedia.values()));
-        this.renderer.fitToScreen();
         this.setupInitialData();
     }
     setupInitialData() {

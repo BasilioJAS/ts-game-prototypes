@@ -85,7 +85,6 @@ export class ButterflyCatcherGame {
       () => Array.from(this.encyclopedia.values())
     );
 
-    this.renderer.fitToScreen();
     this.setupInitialData();
   }
 
