@@ -1,4 +1,5 @@
 import { Vector2 } from '../types/index.js';
+import { APP_VERSION } from '../version.js';
 
 export class VirtualDPad {
   direction: Vector2 = { x: 0, y: 0 };
@@ -30,6 +31,15 @@ export class VirtualDPad {
       pointer-events: none;
     `;
     this.el.appendChild(this.thumbEl);
+
+    const verEl = document.createElement('div');
+    verEl.textContent = `v${APP_VERSION}`;
+    verEl.style.cssText = `
+      position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%);
+      color: rgba(255,255,255,0.3); font-size: 10px; white-space: nowrap;
+      pointer-events: none;
+    `;
+    this.el.appendChild(verEl);
 
     const arrows = [
       { dx: 0, dy: -1, label: '↑' },

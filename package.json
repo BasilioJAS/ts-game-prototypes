@@ -4,6 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
+    "prebuild": "node scripts/bump-version.js",
     "dev": "npx tsc --watch",
     "build": "npx tsc",
     "deploy": "git subtree push --prefix . origin gh-pages"
