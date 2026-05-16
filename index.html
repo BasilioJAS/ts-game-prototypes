@@ -7,40 +7,37 @@
   <style>
     body {
       margin: 0;
-      padding: 20px;
+      padding: 0;
       background: #1a202c;
       display: flex;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
+      min-height: 100dvh;
       font-family: Arial, sans-serif;
+      overflow: hidden;
     }
     #gameContainer {
-      text-align: center;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      height: 100vh;
+      height: 100dvh;
     }
     canvas {
       border: 2px solid #4a5568;
       border-radius: 8px;
       max-width: 100%;
-      height: auto;
+      max-height: 100vh;
+      max-height: 100dvh;
       touch-action: none;
-    }
-    h1 {
-      color: #e2e8f0;
-      margin-bottom: 10px;
-    }
-    .controls {
-      color: #a0aec0;
-      margin-top: 10px;
-      font-size: 14px;
     }
   </style>
 </head>
 <body>
   <div id="gameContainer">
-    <h1>Butterfly Catcher</h1>
     <canvas id="gameCanvas" width="800" height="600"></canvas>
-    <div class="controls">WASD/Arrows to move. Go to HOUSE to deposit butterflies.</div>
   </div>
   <script type="module">
     import { ButterflyCatcherGame } from './butterfly-catcher/src/game.js';

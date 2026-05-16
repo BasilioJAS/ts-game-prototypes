@@ -7,9 +7,12 @@ import { SkillManager } from '../../shared/mechanics/SkillManager.js';
 import { ResearchCenter } from '../../shared/mechanics/ResearchCenter.js';
 import { ShopSystem } from '../../shared/mechanics/ShopSystem.js';
 import { AdRewardSystem } from '../../shared/mechanics/AdRewardSystem.js';
+import { MenuSystem, BUTTERFLY_TYPES } from '../../shared/mechanics/MenuSystem.js';
 import { VirtualDPad } from '../../shared/engine/VirtualDPad.js';
 export class ButterflyCatcherGame {
     constructor() {
+        this.dpad = new VirtualDPad();
+        this.state = 'menu';
         this.player = {
             position: { x: 400, y: 300 },
             speed: 200,
@@ -25,11 +28,11 @@ export class ButterflyCatcherGame {
         this.score = 0;
         this.cardChoiceThreshold = 100;
         this.lastCardChoiceAt = 0;
-        this.dpad = new VirtualDPad();
+        this.encyclopedia = new Map();
         this.update = (deltaTime) => {
-            // D-pad touch input
+            if (this.state === 'menu')
+                return;
             this.dpad.update(this.input.activeTouches);
-            // Player movement (keyboard + gamepad + d-pad)
             const kbDir = this.input.getMovementDirection();
             const dpadDir = this.dpad.direction;
             const dx = kbDir.x + dpadDir.x;
@@ -39,19 +42,15 @@ export class ButterflyCatcherGame {
                 this.player.position.x += (dx / len) * this.player.speed * deltaTime;
                 this.player.position.y += (dy / len) * this.player.speed * deltaTime;
             }
-            // Clamp to canvas bounds
             this.player.position.x = Math.max(10, Math.min(this.renderer.canvas.width - 10, this.player.position.x));
             this.player.position.y = Math.max(10, Math.min(this.renderer.canvas.height - 10, this.player.position.y));
-            // Update butterflies
             this.butterflies.forEach(b => {
                 b.position.x += b.velocity.x * deltaTime;
                 b.position.y += b.velocity.y * deltaTime;
-                // Change direction randomly
                 if (Math.random() < 0.02) {
                     b.velocity.x = (Math.random() - 0.5) * 100;
                     b.velocity.y = (Math.random() - 0.5) * 100;
                 }
-                // Bounce off walls
                 if (b.position.x < 10 || b.position.x > this.renderer.canvas.width - 10)
                     b.velocity.x *= -1;
                 if (b.position.y < 10 || b.position.y > this.renderer.canvas.height - 10)
@@ -59,7 +58,6 @@ export class ButterflyCatcherGame {
                 b.position.x = Math.max(10, Math.min(this.renderer.canvas.width - 10, b.position.x));
                 b.position.y = Math.max(10, Math.min(this.renderer.canvas.height - 10, b.position.y));
             });
-            // Check butterfly catches
             this.butterflies.forEach(b => {
                 if (b.caught)
                     return;
@@ -68,11 +66,10 @@ export class ButterflyCatcherGame {
                 if (dist < this.player.catchRadius) {
                     b.caught = true;
                     this.caughtButterflies.push(b);
+                    this.trackEncyclopedia(b);
                 }
             });
-            // Remove caught butterflies from active list
             this.butterflies = this.butterflies.filter(b => !b.caught);
-            // Check if player is at house to deposit butterflies
             const atHouse = this.player.position.x > this.house.position.x &&
                 this.player.position.x < this.house.position.x + this.house.width &&
                 this.player.position.y > this.house.position.y &&
@@ -83,40 +80,35 @@ export class ButterflyCatcherGame {
                 this.currencies.addSoft(Math.floor(totalValue));
                 this.score += Math.floor(totalValue);
                 this.caughtButterflies = [];
-                // Check for card choice
                 if (this.score - this.lastCardChoiceAt >= this.cardChoiceThreshold) {
                     this.lastCardChoiceAt = this.score;
                     this.triggerCardChoice();
                 }
-                // Spawn more butterflies
                 this.spawnButterflies(3);
             }
-            // Update research
             this.research.update(deltaTime);
         };
         this.render = (_deltaTime) => {
             this.renderer.clear();
-            // Draw background
             this.renderer.drawRect(0, 0, this.renderer.canvas.width, this.renderer.canvas.height, '#2d3748');
-            // Draw house
+            if (this.state === 'menu') {
+                this.renderer.drawText('Butterfly Catcher', 400, 300, '#e2e8f0', 32);
+                this.renderer.drawText('Select an option from the menu', 400, 340, '#a0aec0', 16);
+                return;
+            }
             this.renderer.drawRect(this.house.position.x, this.house.position.y, this.house.width, this.house.height, '#8b4513');
             this.renderer.drawText('HOUSE', this.house.position.x + 10, this.house.position.y + 45, 'white', 12);
-            // Draw player
             this.renderer.drawCircle(this.player.position.x, this.player.position.y, 10, '#3182ce');
             this.renderer.drawCircle(this.player.position.x, this.player.position.y, this.player.catchRadius, 'rgba(49, 130, 206, 0.2)');
-            // Draw butterflies
             this.butterflies.forEach(b => {
                 this.renderer.drawCircle(b.position.x, b.position.y, 8, b.color);
             });
-            // Draw UI
             this.renderer.drawText(`Soft: ${this.currencies.soft}`, 10, 30, 'white', 16);
             this.renderer.drawText(`Hard: ${this.currencies.hard}`, 10, 50, 'white', 16);
             this.renderer.drawText(`Score: ${this.score}`, 10, 70, 'white', 16);
             this.renderer.drawText(`Caught: ${this.caughtButterflies.length}`, 10, 90, 'white', 16);
-            // Draw d-pad
             this.dpad.render(this.renderer.ctx);
-            // Draw instructions
-            this.renderer.drawText('Keyboard/Gamepad: WASD/Arrows | Touch: use D-Pad', 180, 30, '#a0aec0', 12);
+            this.renderer.drawText('WASD/Arrows or D-Pad to move. Go to HOUSE to deposit.', 180, 30, '#a0aec0', 12);
         };
         this.renderer = new CanvasRenderer('gameCanvas', 800, 600);
         this.input = new InputHandler(this.renderer.canvas);
@@ -127,11 +119,11 @@ export class ButterflyCatcherGame {
         this.research = new ResearchCenter();
         this.shop = new ShopSystem(this.currencies);
         this.adReward = new AdRewardSystem(this.currencies);
+        this.menu = new MenuSystem(() => this.startGame(), () => Array.from(this.encyclopedia.values()));
         this.dpad.setCanvasSize(this.renderer.canvas.width, this.renderer.canvas.height);
         this.setupInitialData();
     }
     setupInitialData() {
-        // Setup skills
         this.skills.addSkill({
             id: 'speed',
             name: 'Speed',
@@ -153,7 +145,6 @@ export class ButterflyCatcherGame {
             maxLevel: 10,
             description: 'Increase soft currency per butterfly',
         });
-        // Setup cards
         this.cardSystem.setCards([
             { id: 'speed_boost', skillId: 'speed', effect: '+1 Speed Level', rarity: 'common' },
             { id: 'catch_boost', skillId: 'catch_radius', effect: '+1 Catch Radius Level', rarity: 'common' },
@@ -162,7 +153,6 @@ export class ButterflyCatcherGame {
             { id: 'catch_rare', skillId: 'catch_radius', effect: '+2 Catch Radius Levels', rarity: 'rare' },
             { id: 'value_legendary', skillId: 'butterfly_value', effect: '+3 Butterfly Value Levels', rarity: 'legendary' },
         ]);
-        // Setup research
         this.research.addResearch({
             id: 'butterfly_spawn_rate',
             name: 'Butterfly Spawn Rate',
@@ -170,7 +160,6 @@ export class ButterflyCatcherGame {
             progress: 0,
             completed: false,
         });
-        // Setup shop
         this.shop.addItem({
             id: 'double_currency',
             name: 'Double Currency',
@@ -187,14 +176,30 @@ export class ButterflyCatcherGame {
         });
     }
     start() {
+        this.adReward.createButton();
+        this.adReward.hide();
+        this.menu.showMenu();
         this.gameLoop.start();
-        this.adReward.showAdButton();
+    }
+    startGame() {
+        this.state = 'playing';
+        this.player.position = { x: 400, y: 300 };
+        this.butterflies = [];
+        this.caughtButterflies = [];
+        this.score = 0;
+        this.lastCardChoiceAt = 0;
+        this.currencies.setData({ soft: 0, hard: 0 });
+        this.adReward.createButton();
+        this.adReward.show();
         this.spawnButterflies(5);
     }
     spawnButterflies(count) {
         for (let i = 0; i < count; i++) {
+            const typeIdx = Math.floor(Math.random() * BUTTERFLY_TYPES.length);
+            const type = BUTTERFLY_TYPES[typeIdx];
             const butterfly = {
                 id: `butterfly_${Date.now()}_${i}`,
+                type: type.id,
                 position: {
                     x: Math.random() * (this.renderer.canvas.width - 40) + 20,
                     y: Math.random() * (this.renderer.canvas.height - 40) + 20,
@@ -203,11 +208,26 @@ export class ButterflyCatcherGame {
                     x: (Math.random() - 0.5) * 100,
                     y: (Math.random() - 0.5) * 100,
                 },
-                color: ['#ff6b6b', '#4ecdc4', '#45b7d1', '#f9ca24', '#6c5ce7'][Math.floor(Math.random() * 5)],
+                color: type.color,
                 value: Math.floor(Math.random() * 10) + 5,
                 caught: false,
             };
             this.butterflies.push(butterfly);
+        }
+    }
+    trackEncyclopedia(butterfly) {
+        const existing = this.encyclopedia.get(butterfly.type);
+        if (existing) {
+            existing.count++;
+            existing.totalValue += butterfly.value;
+        }
+        else {
+            this.encyclopedia.set(butterfly.type, {
+                type: butterfly.type,
+                color: butterfly.color,
+                count: 1,
+                totalValue: butterfly.value,
+            });
         }
     }
     triggerCardChoice() {
