@@ -32,7 +32,6 @@ export class ButterflyCatcherGame {
         this.update = (deltaTime) => {
             if (this.state === 'menu')
                 return;
-            this.dpad.update(this.input.activeTouches);
             const kbDir = this.input.getMovementDirection();
             const dpadDir = this.dpad.direction;
             const dx = kbDir.x + dpadDir.x;
@@ -107,7 +106,6 @@ export class ButterflyCatcherGame {
             this.renderer.drawText(`Hard: ${this.currencies.hard}`, 10, 50, 'white', 16);
             this.renderer.drawText(`Score: ${this.score}`, 10, 70, 'white', 16);
             this.renderer.drawText(`Caught: ${this.caughtButterflies.length}`, 10, 90, 'white', 16);
-            this.dpad.render(this.renderer.ctx);
             this.renderer.drawText('WASD/Arrows or D-Pad to move. Go to HOUSE to deposit.', 180, 30, '#a0aec0', 12);
         };
         this.renderer = new CanvasRenderer('gameCanvas', 800, 600);
@@ -121,7 +119,6 @@ export class ButterflyCatcherGame {
         this.adReward = new AdRewardSystem(this.currencies);
         this.menu = new MenuSystem(() => this.startGame(), () => Array.from(this.encyclopedia.values()));
         this.renderer.fitToScreen();
-        this.dpad.setCanvasSize(this.renderer.canvas.width, this.renderer.canvas.height);
         this.setupInitialData();
     }
     setupInitialData() {
@@ -177,6 +174,7 @@ export class ButterflyCatcherGame {
         });
     }
     start() {
+        this.dpad.hide();
         this.adReward.createButton();
         this.adReward.hide();
         this.menu.showMenu();
@@ -190,6 +188,7 @@ export class ButterflyCatcherGame {
         this.score = 0;
         this.lastCardChoiceAt = 0;
         this.currencies.setData({ soft: 0, hard: 0 });
+        this.dpad.show();
         this.adReward.createButton();
         this.adReward.show();
         this.spawnButterflies(5);

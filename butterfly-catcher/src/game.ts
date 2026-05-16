@@ -86,7 +86,6 @@ export class ButterflyCatcherGame {
     );
 
     this.renderer.fitToScreen();
-    this.dpad.setCanvasSize(this.renderer.canvas.width, this.renderer.canvas.height);
     this.setupInitialData();
   }
 
@@ -150,6 +149,7 @@ export class ButterflyCatcherGame {
   }
 
   start(): void {
+    this.dpad.hide();
     this.adReward.createButton();
     this.adReward.hide();
     this.menu.showMenu();
@@ -167,6 +167,7 @@ export class ButterflyCatcherGame {
 
     this.currencies.setData({ soft: 0, hard: 0 });
 
+    this.dpad.show();
     this.adReward.createButton();
     this.adReward.show();
     this.spawnButterflies(5);
@@ -212,8 +213,6 @@ export class ButterflyCatcherGame {
 
   private update = (deltaTime: number): void => {
     if (this.state === 'menu') return;
-
-    this.dpad.update(this.input.activeTouches);
 
     const kbDir = this.input.getMovementDirection();
     const dpadDir = this.dpad.direction;
@@ -325,8 +324,6 @@ export class ButterflyCatcherGame {
     this.renderer.drawText(`Hard: ${this.currencies.hard}`, 10, 50, 'white', 16);
     this.renderer.drawText(`Score: ${this.score}`, 10, 70, 'white', 16);
     this.renderer.drawText(`Caught: ${this.caughtButterflies.length}`, 10, 90, 'white', 16);
-
-    this.dpad.render(this.renderer.ctx);
 
     this.renderer.drawText('WASD/Arrows or D-Pad to move. Go to HOUSE to deposit.', 180, 30, '#a0aec0', 12);
   };
