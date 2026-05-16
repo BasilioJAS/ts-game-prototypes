@@ -39,4 +39,24 @@ export class CanvasRenderer {
   drawImage(img: HTMLImageElement, x: number, y: number, width: number, height: number): void {
     this.ctx.drawImage(img, x, y, width, height);
   }
+
+  fitToScreen(): void {
+    const resize = () => {
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const ar = this.canvas.width / this.canvas.height;
+      let w: number, h: number;
+      if (vw / vh > ar) {
+        h = vh;
+        w = h * ar;
+      } else {
+        w = vw;
+        h = w / ar;
+      }
+      this.canvas.style.width = `${w}px`;
+      this.canvas.style.height = `${h}px`;
+    };
+    resize();
+    window.addEventListener('resize', resize);
+  }
 }

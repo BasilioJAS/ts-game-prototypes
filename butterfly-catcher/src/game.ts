@@ -85,6 +85,7 @@ export class ButterflyCatcherGame {
       () => Array.from(this.encyclopedia.values())
     );
 
+    this.renderer.fitToScreen();
     this.dpad.setCanvasSize(this.renderer.canvas.width, this.renderer.canvas.height);
     this.setupInitialData();
   }

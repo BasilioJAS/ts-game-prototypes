@@ -10,24 +10,27 @@ export class InputHandler {
         this.canvas = canvas;
         window.addEventListener('keydown', (e) => this.keys.add(e.key));
         window.addEventListener('keyup', (e) => this.keys.delete(e.key));
-        window.addEventListener('mousemove', (e) => {
+        const toCanvas = (clientX, clientY) => {
             const rect = canvas.getBoundingClientRect();
-            const sx = canvas.width / rect.width;
-            const sy = canvas.height / rect.height;
-            this.mousePosition.x = (e.clientX - rect.left) * sx;
-            this.mousePosition.y = (e.clientY - rect.top) * sy;
+            const scale = Math.min(rect.width / canvas.width, rect.height / canvas.height);
+            const renderW = canvas.width * scale;
+            const renderH = canvas.height * scale;
+            const offsetX = (rect.width - renderW) / 2;
+            const offsetY = (rect.height - renderH) / 2;
+            const x = (clientX - rect.left - offsetX) / scale;
+            const y = (clientY - rect.top - offsetY) / scale;
+            return {
+                x: Math.max(0, Math.min(canvas.width, x)),
+                y: Math.max(0, Math.min(canvas.height, y)),
+            };
+        };
+        window.addEventListener('mousemove', (e) => {
+            const p = toCanvas(e.clientX, e.clientY);
+            this.mousePosition.x = p.x;
+            this.mousePosition.y = p.y;
         });
         window.addEventListener('mousedown', () => this.mouseDown = true);
         window.addEventListener('mouseup', () => this.mouseDown = false);
-        const toCanvas = (clientX, clientY) => {
-            const rect = canvas.getBoundingClientRect();
-            const sx = canvas.width / rect.width;
-            const sy = canvas.height / rect.height;
-            return {
-                x: (clientX - rect.left) * sx,
-                y: (clientY - rect.top) * sy,
-            };
-        };
         const updateTouches = (e) => {
             this.activeTouches = Array.from(e.touches).map(t => toCanvas(t.clientX, t.clientY));
         };
