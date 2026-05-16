@@ -1,0 +1,14 @@
+{
+  "name": "ts-game-prototypes",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "npx tsc --watch",
+    "build": "npx tsc",
+    "deploy": "git subtree push --prefix . origin gh-pages"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0"
+  }
+}
