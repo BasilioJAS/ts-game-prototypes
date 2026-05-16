@@ -88,19 +88,28 @@ export class ButterflyCatcherGame {
             this.research.update(deltaTime);
         };
         this.render = (_deltaTime) => {
-            this.renderer.clear();
-            this.renderer.drawRect(0, 0, this.renderer.canvas.width, this.renderer.canvas.height, '#2d3748');
+            const ctx = this.renderer.ctx;
+            const cw = this.renderer.canvas.width;
+            const ch = this.renderer.canvas.height;
+            const vw = window.innerWidth;
+            const vh = window.innerHeight;
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            ctx.clearRect(0, 0, cw, ch);
+            ctx.fillStyle = '#2d3748';
+            ctx.fillRect(0, 0, cw, ch);
             if (this.state === 'menu') {
-                this.renderer.drawText('Butterfly Catcher', 400, 300, '#e2e8f0', 32);
-                this.renderer.drawText('Select an option from the menu', 400, 340, '#a0aec0', 16);
+                this.renderer.drawText('Butterfly Catcher', cw / 2, ch / 2, '#e2e8f0', 32);
+                this.renderer.drawText('Select an option from the menu', cw / 2, ch / 2 + 40, '#a0aec0', 16);
                 return;
             }
-            const vb = this.getVisibleBounds();
-            const camX = Math.max(0, Math.min(this.renderer.canvas.width - vb.width, this.player.position.x - vb.width / 2));
-            const camY = Math.max(0, Math.min(this.renderer.canvas.height - vb.height, this.player.position.y - vb.height / 2));
-            const ctx = this.renderer.ctx;
-            ctx.save();
-            ctx.translate(-camX, -camY);
+            const scale = vh / ch;
+            const tx = vw / 2 - this.player.position.x * scale;
+            const ty = vh / 2 - this.player.position.y * scale;
+            const minTx = vw - cw * scale;
+            const minTy = vh - ch * scale;
+            const camX = Math.max(minTx, Math.min(0, tx));
+            const camY = Math.max(minTy, Math.min(0, ty));
+            ctx.setTransform(scale, 0, 0, scale, camX, camY);
             this.renderer.drawRect(this.house.position.x, this.house.position.y, this.house.width, this.house.height, '#8b4513');
             this.renderer.drawText('HOUSE', this.house.position.x + 10, this.house.position.y + 45, 'white', 12);
             this.renderer.drawCircle(this.player.position.x, this.player.position.y, 10, '#3182ce');
@@ -108,32 +117,32 @@ export class ButterflyCatcherGame {
             this.butterflies.forEach(b => {
                 this.renderer.drawCircle(b.position.x, b.position.y, 8, b.color);
             });
-            ctx.restore();
-            const hx = vb.left + 8;
-            const hy = vb.top + 8;
-            this.renderer.drawText(`Soft: ${this.currencies.soft}`, hx, hy + 22, 'white', 16);
-            this.renderer.drawText(`Hard: ${this.currencies.hard}`, hx, hy + 42, 'white', 16);
-            this.renderer.drawText(`Score: ${this.score}`, hx, hy + 62, 'white', 16);
-            this.renderer.drawText(`Caught: ${this.caughtButterflies.length}`, hx, hy + 82, 'white', 16);
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            const sx = (screenX) => screenX * cw / vw;
+            const sy = (screenY) => screenY * ch / vh;
+            this.renderer.drawText(`Soft: ${this.currencies.soft}`, sx(8), sy(22), 'white', 16);
+            this.renderer.drawText(`Hard: ${this.currencies.hard}`, sx(8), sy(42), 'white', 16);
+            this.renderer.drawText(`Score: ${this.score}`, sx(8), sy(62), 'white', 16);
+            this.renderer.drawText(`Caught: ${this.caughtButterflies.length}`, sx(8), sy(82), 'white', 16);
             const allSkills = this.skills.getAllSkills();
             const skillLabels = [
                 { id: 'speed', label: 'Speed' },
                 { id: 'catch_radius', label: 'Catch' },
                 { id: 'butterfly_value', label: 'Value' },
             ];
-            const rx = vb.left + vb.width - 130;
+            const rx = cw - sx(10) - 120;
             skillLabels.forEach((sl, i) => {
                 const skill = allSkills.find(s => s.id === sl.id);
                 const lv = skill?.level ?? 1;
                 const maxLv = skill?.maxLevel ?? 10;
                 const barW = 80;
                 const barH = 8;
-                const by = hy + i * 28;
+                const by = sy(25) + i * 28;
                 this.renderer.drawText(`${sl.label} Lv.${lv}`, rx, by, '#e2e8f0', 13);
                 this.renderer.drawRect(rx, by + 5, barW, barH, '#4a5568');
                 this.renderer.drawRect(rx, by + 5, barW * (lv / maxLv), barH, '#48bb78');
             });
-            this.renderer.drawText('WASD/Arrows or D-Pad to move. Go to HOUSE to deposit.', hx, hy + 110, '#a0aec0', 12);
+            this.renderer.drawText('WASD/Arrows or D-Pad to move. Go to HOUSE to deposit.', sx(8), sy(110), '#a0aec0', 12);
         };
         this.renderer = new CanvasRenderer('gameCanvas', 800, 600);
         this.input = new InputHandler(this.renderer.canvas);
@@ -261,20 +270,5 @@ export class ButterflyCatcherGame {
         this.cardSystem.showChoice(cards, (card) => {
             this.skills.upgradeSkill(card.skillId);
         });
-    }
-    getVisibleBounds() {
-        const vw = window.innerWidth;
-        const vh = window.innerHeight;
-        const cw = this.renderer.canvas.width;
-        const ch = this.renderer.canvas.height;
-        const scale = Math.max(vw / cw, vh / ch);
-        const vw2 = vw / scale;
-        const vh2 = vh / scale;
-        return {
-            left: (cw - vw2) / 2,
-            top: (ch - vh2) / 2,
-            width: vw2,
-            height: vh2,
-        };
     }
 }

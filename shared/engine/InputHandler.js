@@ -12,16 +12,9 @@ export class InputHandler {
         window.addEventListener('keyup', (e) => this.keys.delete(e.key));
         const toCanvas = (clientX, clientY) => {
             const rect = canvas.getBoundingClientRect();
-            const scale = Math.max(rect.width / canvas.width, rect.height / canvas.height);
-            const renderW = canvas.width * scale;
-            const renderH = canvas.height * scale;
-            const offsetX = (rect.width - renderW) / 2;
-            const offsetY = (rect.height - renderH) / 2;
-            const x = (clientX - rect.left - offsetX) / scale;
-            const y = (clientY - rect.top - offsetY) / scale;
             return {
-                x: Math.max(0, Math.min(canvas.width, x)),
-                y: Math.max(0, Math.min(canvas.height, y)),
+                x: (clientX - rect.left) * (canvas.width / rect.width),
+                y: (clientY - rect.top) * (canvas.height / rect.height),
             };
         };
         window.addEventListener('mousemove', (e) => {
