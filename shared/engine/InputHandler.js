@@ -29,13 +29,12 @@ export class InputHandler {
             };
         };
         const updateTouches = (e) => {
-            this.activeTouches = Array.from(e.touches);
+            this.activeTouches = Array.from(e.touches).map(t => toCanvas(t.clientX, t.clientY));
         };
         canvas.addEventListener('touchstart', (e) => {
             e.preventDefault();
             updateTouches(e);
-            const t = e.touches[0];
-            const p = toCanvas(t.clientX, t.clientY);
+            const p = toCanvas(e.touches[0].clientX, e.touches[0].clientY);
             this.touchPosition.x = p.x;
             this.touchPosition.y = p.y;
             this.touchActive = true;
@@ -43,10 +42,6 @@ export class InputHandler {
         canvas.addEventListener('touchmove', (e) => {
             e.preventDefault();
             updateTouches(e);
-            const t = e.touches[0];
-            const p = toCanvas(t.clientX, t.clientY);
-            this.touchPosition.x = p.x;
-            this.touchPosition.y = p.y;
         }, { passive: false });
         canvas.addEventListener('touchend', (e) => {
             e.preventDefault();

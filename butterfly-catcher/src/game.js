@@ -28,7 +28,7 @@ export class ButterflyCatcherGame {
         this.dpad = new VirtualDPad();
         this.update = (deltaTime) => {
             // D-pad touch input
-            this.dpad.updateFromTouches(this.input.activeTouches, this.renderer.canvas);
+            this.dpad.update(this.input.activeTouches);
             // Player movement (keyboard + gamepad + d-pad)
             const kbDir = this.input.getMovementDirection();
             const dpadDir = this.dpad.direction;

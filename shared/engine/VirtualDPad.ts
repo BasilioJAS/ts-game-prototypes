@@ -7,61 +7,35 @@ export class VirtualDPad {
   direction: Vector2 = { x: 0, y: 0 };
   active: boolean = false;
   thumbPosition: Vector2 = { x: 0, y: 0 };
-  private touchId: number | null = null;
-  private canvasWidth: number = 800;
-  private canvasHeight: number = 600;
 
   setCanvasSize(w: number, h: number): void {
-    this.canvasWidth = w;
-    this.canvasHeight = h;
     this.center.x = 100;
     this.center.y = h - 110;
   }
 
-  updateFromTouches(touches: Touch[], canvas: HTMLCanvasElement): void {
+  update(touchCoords: Vector2[]): void {
     this.active = false;
     this.direction = { x: 0, y: 0 };
     this.thumbPosition = { x: this.center.x, y: this.center.y };
 
-    const rect = canvas.getBoundingClientRect();
-    const sx = this.canvasWidth / rect.width;
-    const sy = this.canvasHeight / rect.height;
+    for (const t of touchCoords) {
+      const dx = t.x - this.center.x;
+      const dy = t.y - this.center.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
 
-    let touchOnDPad: Touch | null = null;
-    for (const t of touches) {
-      const tx = (t.clientX - rect.left) * sx;
-      const ty = (t.clientY - rect.top) * sy;
-      const dx = tx - this.center.x;
-      const dy = ty - this.center.y;
-      if (Math.sqrt(dx * dx + dy * dy) <= this.radius) {
-        touchOnDPad = t;
-        break;
+      if (dist <= this.radius) {
+        this.active = true;
+        if (dist > this.deadzone) {
+          this.direction = { x: dx / dist, y: dy / dist };
+          const maxThumbDist = this.radius * 0.45;
+          const thumbDist = Math.min(dist, maxThumbDist);
+          this.thumbPosition = {
+            x: this.center.x + (dx / dist) * thumbDist,
+            y: this.center.y + (dy / dist) * thumbDist,
+          };
+        }
+        return;
       }
-    }
-
-    if (!touchOnDPad) {
-      this.touchId = null;
-      return;
-    }
-
-    this.touchId = touchOnDPad.identifier;
-    const tx = (touchOnDPad.clientX - rect.left) * sx;
-    const ty = (touchOnDPad.clientY - rect.top) * sy;
-    const dx = tx - this.center.x;
-    const dy = ty - this.center.y;
-    const dist = Math.sqrt(dx * dx + dy * dy);
-
-    this.active = true;
-    if (dist > this.deadzone) {
-      this.direction = { x: dx / dist, y: dy / dist };
-      const maxThumbDist = this.radius * 0.45;
-      const thumbDist = Math.min(dist, maxThumbDist);
-      this.thumbPosition = {
-        x: this.center.x + (dx / dist) * thumbDist,
-        y: this.center.y + (dy / dist) * thumbDist,
-      };
-    } else {
-      this.thumbPosition = { x: this.center.x, y: this.center.y };
     }
   }
 
