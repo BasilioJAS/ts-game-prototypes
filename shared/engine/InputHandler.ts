@@ -1,4 +1,4 @@
-import { Vector2 } from '../types';
+import { Vector2 } from '../types/index.js';
 
 export class InputHandler {
   keys: Set<string> = new Set();

@@ -1,12 +1,12 @@
-import { GameLoop } from '../../shared/engine/GameLoop';
-import { CanvasRenderer } from '../../shared/engine/CanvasRenderer';
-import { InputHandler } from '../../shared/engine/InputHandler';
-import { CurrencyManager } from '../../shared/mechanics/CurrencyManager';
-import { CardSystem } from '../../shared/mechanics/CardSystem';
-import { SkillManager } from '../../shared/mechanics/SkillManager';
-import { ResearchCenter } from '../../shared/mechanics/ResearchCenter';
-import { ShopSystem } from '../../shared/mechanics/ShopSystem';
-import { AdRewardSystem } from '../../shared/mechanics/AdRewardSystem';
+import { GameLoop } from '../../shared/engine/GameLoop.js';
+import { CanvasRenderer } from '../../shared/engine/CanvasRenderer.js';
+import { InputHandler } from '../../shared/engine/InputHandler.js';
+import { CurrencyManager } from '../../shared/mechanics/CurrencyManager.js';
+import { CardSystem } from '../../shared/mechanics/CardSystem.js';
+import { SkillManager } from '../../shared/mechanics/SkillManager.js';
+import { ResearchCenter } from '../../shared/mechanics/ResearchCenter.js';
+import { ShopSystem } from '../../shared/mechanics/ShopSystem.js';
+import { AdRewardSystem } from '../../shared/mechanics/AdRewardSystem.js';
 export class ButterflyCatcherGame {
     constructor() {
         this.player = {

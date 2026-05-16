@@ -1,4 +1,4 @@
-import { CardData, SkillData } from '../types';
+import { CardData, SkillData } from '../types/index.js';
 
 export class CardSystem {
   private cards: CardData[] = [];

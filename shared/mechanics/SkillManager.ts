@@ -1,4 +1,4 @@
-import { SkillData } from '../types';
+import { SkillData } from '../types/index.js';
 
 export class SkillManager {
   private skills: Map<string, SkillData> = new Map();

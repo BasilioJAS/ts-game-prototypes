@@ -1,4 +1,4 @@
-import { CurrencyData } from '../types';
+import { CurrencyData } from '../types/index.js';
 
 export class CurrencyManager {
   private data: CurrencyData = { soft: 0, hard: 0 };

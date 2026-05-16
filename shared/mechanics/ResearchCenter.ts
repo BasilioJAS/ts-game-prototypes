@@ -1,4 +1,4 @@
-import { ResearchData } from '../types';
+import { ResearchData } from '../types/index.js';
 
 export class ResearchCenter {
   private researches: Map<string, ResearchData> = new Map();

@@ -1,4 +1,4 @@
-import { ShopItem } from '../types';
+import { ShopItem } from '../types/index.js';
 import { CurrencyManager } from './CurrencyManager';
 
 export class ShopSystem {
