@@ -20,7 +20,7 @@ export class InputHandler {
 
     const toCanvas = (clientX: number, clientY: number) => {
       const rect = canvas.getBoundingClientRect();
-      const scale = Math.min(rect.width / canvas.width, rect.height / canvas.height);
+      const scale = Math.max(rect.width / canvas.width, rect.height / canvas.height);
       const renderW = canvas.width * scale;
       const renderH = canvas.height * scale;
       const offsetX = (rect.width - renderW) / 2;

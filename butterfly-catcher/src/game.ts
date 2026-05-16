@@ -324,6 +324,26 @@ export class ButterflyCatcherGame {
     this.renderer.drawText(`Score: ${this.score}`, 10, 70, 'white', 16);
     this.renderer.drawText(`Caught: ${this.caughtButterflies.length}`, 10, 90, 'white', 16);
 
+    const allSkills = this.skills.getAllSkills();
+    const skillLabels = [
+      { id: 'speed', label: 'Speed' },
+      { id: 'catch_radius', label: 'Catch' },
+      { id: 'butterfly_value', label: 'Value' },
+    ];
+    const sr = this.renderer;
+    skillLabels.forEach((sl, i) => {
+      const skill = allSkills.find(s => s.id === sl.id);
+      const lv = skill?.level ?? 1;
+      const maxLv = skill?.maxLevel ?? 10;
+      const barW = 80;
+      const barH = 8;
+      const bx = sr.canvas.width - 120;
+      const by = 25 + i * 28;
+      sr.drawText(`${sl.label} Lv.${lv}`, bx, by, '#e2e8f0', 13);
+      sr.drawRect(bx, by + 5, barW, barH, '#4a5568');
+      sr.drawRect(bx, by + 5, barW * (lv / maxLv), barH, '#48bb78');
+    });
+
     this.renderer.drawText('WASD/Arrows or D-Pad to move. Go to HOUSE to deposit.', 180, 30, '#a0aec0', 12);
   };
 }

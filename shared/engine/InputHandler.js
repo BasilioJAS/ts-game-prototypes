@@ -12,7 +12,7 @@ export class InputHandler {
         window.addEventListener('keyup', (e) => this.keys.delete(e.key));
         const toCanvas = (clientX, clientY) => {
             const rect = canvas.getBoundingClientRect();
-            const scale = Math.min(rect.width / canvas.width, rect.height / canvas.height);
+            const scale = Math.max(rect.width / canvas.width, rect.height / canvas.height);
             const renderW = canvas.width * scale;
             const renderH = canvas.height * scale;
             const offsetX = (rect.width - renderW) / 2;
