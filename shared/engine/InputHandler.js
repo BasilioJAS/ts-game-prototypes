@@ -5,6 +5,7 @@ export class InputHandler {
         this.mouseDown = false;
         this.touchPosition = { x: 0, y: 0 };
         this.touchActive = false;
+        this.activeTouches = [];
         this.gamepadIndex = null;
         this.canvas = canvas;
         window.addEventListener('keydown', (e) => this.keys.add(e.key));
@@ -27,8 +28,12 @@ export class InputHandler {
                 y: (clientY - rect.top) * sy,
             };
         };
+        const updateTouches = (e) => {
+            this.activeTouches = Array.from(e.touches);
+        };
         canvas.addEventListener('touchstart', (e) => {
             e.preventDefault();
+            updateTouches(e);
             const t = e.touches[0];
             const p = toCanvas(t.clientX, t.clientY);
             this.touchPosition.x = p.x;
@@ -37,6 +42,7 @@ export class InputHandler {
         }, { passive: false });
         canvas.addEventListener('touchmove', (e) => {
             e.preventDefault();
+            updateTouches(e);
             const t = e.touches[0];
             const p = toCanvas(t.clientX, t.clientY);
             this.touchPosition.x = p.x;
@@ -44,6 +50,7 @@ export class InputHandler {
         }, { passive: false });
         canvas.addEventListener('touchend', (e) => {
             e.preventDefault();
+            updateTouches(e);
             if (e.touches.length === 0) {
                 this.touchActive = false;
             }

@@ -8,6 +8,7 @@ import { SkillManager } from '../../shared/mechanics/SkillManager.js';
 import { ResearchCenter } from '../../shared/mechanics/ResearchCenter.js';
 import { ShopSystem } from '../../shared/mechanics/ShopSystem.js';
 import { AdRewardSystem } from '../../shared/mechanics/AdRewardSystem.js';
+import { VirtualDPad } from '../../shared/engine/VirtualDPad.js';
 
 interface Butterfly {
   id: string;
@@ -58,6 +59,7 @@ export class ButterflyCatcherGame {
   private score: number = 0;
   private cardChoiceThreshold: number = 100;
   private lastCardChoiceAt: number = 0;
+  private dpad: VirtualDPad = new VirtualDPad();
 
   constructor() {
     this.renderer = new CanvasRenderer('gameCanvas', 800, 600);
@@ -71,6 +73,7 @@ export class ButterflyCatcherGame {
     this.shop = new ShopSystem(this.currencies);
     this.adReward = new AdRewardSystem(this.currencies);
 
+    this.dpad.setCanvasSize(this.renderer.canvas.width, this.renderer.canvas.height);
     this.setupInitialData();
   }
 
@@ -164,23 +167,18 @@ export class ButterflyCatcherGame {
   }
 
   private update = (deltaTime: number): void => {
-    // Player movement (keyboard + gamepad)
-    const dir = this.input.getMovementDirection();
-    if (dir.x !== 0 || dir.y !== 0) {
-      this.player.position.x += dir.x * this.player.speed * deltaTime;
-      this.player.position.y += dir.y * this.player.speed * deltaTime;
-    }
+    // D-pad touch input
+    this.dpad.updateFromTouches(this.input.activeTouches, this.renderer.canvas);
 
-    // Touch movement: move toward touch point
-    const touchTarget = this.input.getTouchTarget();
-    if (touchTarget) {
-      const tdx = touchTarget.x - this.player.position.x;
-      const tdy = touchTarget.y - this.player.position.y;
-      const tdist = Math.sqrt(tdx * tdx + tdy * tdy);
-      if (tdist > 15) {
-        this.player.position.x += (tdx / tdist) * this.player.speed * deltaTime;
-        this.player.position.y += (tdy / tdist) * this.player.speed * deltaTime;
-      }
+    // Player movement (keyboard + gamepad + d-pad)
+    const kbDir = this.input.getMovementDirection();
+    const dpadDir = this.dpad.direction;
+    const dx = kbDir.x + dpadDir.x;
+    const dy = kbDir.y + dpadDir.y;
+    const len = Math.sqrt(dx * dx + dy * dy);
+    if (len > 0.01) {
+      this.player.position.x += (dx / len) * this.player.speed * deltaTime;
+      this.player.position.y += (dy / len) * this.player.speed * deltaTime;
     }
 
     // Clamp to canvas bounds
@@ -293,13 +291,10 @@ export class ButterflyCatcherGame {
     this.renderer.drawText(`Score: ${this.score}`, 10, 70, 'white', 16);
     this.renderer.drawText(`Caught: ${this.caughtButterflies.length}`, 10, 90, 'white', 16);
 
-    // Draw touch indicator
-    if (this.input.getTouchTarget()) {
-      const tt = this.input.getTouchTarget()!;
-      this.renderer.drawCircle(tt.x, tt.y, 15, 'rgba(255,255,255,0.3)');
-    }
+    // Draw d-pad
+    this.dpad.render(this.renderer.ctx);
 
     // Draw instructions
-    this.renderer.drawText('Keyboard/Gamepad: WASD/Arrows | Touch: tap to move', 180, 30, '#a0aec0', 12);
+    this.renderer.drawText('Keyboard/Gamepad: WASD/Arrows | Touch: use D-Pad', 180, 30, '#a0aec0', 12);
   };
 }

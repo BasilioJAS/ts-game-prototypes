@@ -7,6 +7,7 @@ export class InputHandler {
 
   touchPosition: Vector2 = { x: 0, y: 0 };
   touchActive: boolean = false;
+  activeTouches: Touch[] = [];
   private canvas: HTMLCanvasElement;
 
   private gamepadIndex: number | null = null;
@@ -37,8 +38,13 @@ export class InputHandler {
       };
     };
 
+    const updateTouches = (e: TouchEvent) => {
+      this.activeTouches = Array.from(e.touches);
+    };
+
     canvas.addEventListener('touchstart', (e) => {
       e.preventDefault();
+      updateTouches(e);
       const t = e.touches[0];
       const p = toCanvas(t.clientX, t.clientY);
       this.touchPosition.x = p.x;
@@ -48,6 +54,7 @@ export class InputHandler {
 
     canvas.addEventListener('touchmove', (e) => {
       e.preventDefault();
+      updateTouches(e);
       const t = e.touches[0];
       const p = toCanvas(t.clientX, t.clientY);
       this.touchPosition.x = p.x;
@@ -56,6 +63,7 @@ export class InputHandler {
 
     canvas.addEventListener('touchend', (e) => {
       e.preventDefault();
+      updateTouches(e);
       if (e.touches.length === 0) {
         this.touchActive = false;
       }
