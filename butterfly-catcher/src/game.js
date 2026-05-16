@@ -25,27 +25,26 @@ export class ButterflyCatcherGame {
         this.cardChoiceThreshold = 100;
         this.lastCardChoiceAt = 0;
         this.update = (deltaTime) => {
-            // Player movement
-            let dx = 0;
-            let dy = 0;
-            if (this.input.isKeyDown('ArrowUp') || this.input.isKeyDown('w'))
-                dy = -1;
-            if (this.input.isKeyDown('ArrowDown') || this.input.isKeyDown('s'))
-                dy = 1;
-            if (this.input.isKeyDown('ArrowLeft') || this.input.isKeyDown('a'))
-                dx = -1;
-            if (this.input.isKeyDown('ArrowRight') || this.input.isKeyDown('d'))
-                dx = 1;
-            if (dx !== 0 || dy !== 0) {
-                const length = Math.sqrt(dx * dx + dy * dy);
-                dx /= length;
-                dy /= length;
-                this.player.position.x += dx * this.player.speed * deltaTime;
-                this.player.position.y += dy * this.player.speed * deltaTime;
-                // Clamp to canvas bounds
-                this.player.position.x = Math.max(10, Math.min(this.renderer.canvas.width - 10, this.player.position.x));
-                this.player.position.y = Math.max(10, Math.min(this.renderer.canvas.height - 10, this.player.position.y));
+            // Player movement (keyboard + gamepad)
+            const dir = this.input.getMovementDirection();
+            if (dir.x !== 0 || dir.y !== 0) {
+                this.player.position.x += dir.x * this.player.speed * deltaTime;
+                this.player.position.y += dir.y * this.player.speed * deltaTime;
             }
+            // Touch movement: move toward touch point
+            const touchTarget = this.input.getTouchTarget();
+            if (touchTarget) {
+                const tdx = touchTarget.x - this.player.position.x;
+                const tdy = touchTarget.y - this.player.position.y;
+                const tdist = Math.sqrt(tdx * tdx + tdy * tdy);
+                if (tdist > 15) {
+                    this.player.position.x += (tdx / tdist) * this.player.speed * deltaTime;
+                    this.player.position.y += (tdy / tdist) * this.player.speed * deltaTime;
+                }
+            }
+            // Clamp to canvas bounds
+            this.player.position.x = Math.max(10, Math.min(this.renderer.canvas.width - 10, this.player.position.x));
+            this.player.position.y = Math.max(10, Math.min(this.renderer.canvas.height - 10, this.player.position.y));
             // Update butterflies
             this.butterflies.forEach(b => {
                 b.position.x += b.velocity.x * deltaTime;
@@ -117,11 +116,16 @@ export class ButterflyCatcherGame {
             this.renderer.drawText(`Hard: ${this.currencies.hard}`, 10, 50, 'white', 16);
             this.renderer.drawText(`Score: ${this.score}`, 10, 70, 'white', 16);
             this.renderer.drawText(`Caught: ${this.caughtButterflies.length}`, 10, 90, 'white', 16);
+            // Draw touch indicator
+            if (this.input.getTouchTarget()) {
+                const tt = this.input.getTouchTarget();
+                this.renderer.drawCircle(tt.x, tt.y, 15, 'rgba(255,255,255,0.3)');
+            }
             // Draw instructions
-            this.renderer.drawText('WASD/Arrows to move. Go to HOUSE to deposit.', 200, 30, '#a0aec0', 12);
+            this.renderer.drawText('Keyboard/Gamepad: WASD/Arrows | Touch: tap to move', 180, 30, '#a0aec0', 12);
         };
         this.renderer = new CanvasRenderer('gameCanvas', 800, 600);
-        this.input = new InputHandler();
+        this.input = new InputHandler(this.renderer.canvas);
         this.gameLoop = new GameLoop(this.update, this.render);
         this.currencies = new CurrencyManager();
         this.cardSystem = new CardSystem();
