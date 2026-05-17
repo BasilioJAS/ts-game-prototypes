@@ -34,6 +34,7 @@ export class ZombieCatcherGame {
         this.decorations = [];
         this.spawnTimer = 0;
         this.invuln = 0;
+        this.fireCooldown = 0;
         this.shopBtn = null;
         this.shopOverlay = null;
         this.update = (dt) => {
@@ -53,6 +54,7 @@ export class ZombieCatcherGame {
             this.player.position.y = Math.max(20, Math.min(WORLD_H - 20, this.player.position.y));
             if (this.invuln > 0)
                 this.invuln -= dt;
+            this.fireCooldown -= dt;
             let nearestZombie = null;
             let nearestDist = Infinity;
             for (const z of this.zombies) {
@@ -63,14 +65,12 @@ export class ZombieCatcherGame {
                     nearestZombie = z;
                 }
             }
-            if (nearestZombie && nearestDist < 400) {
-                const fireRate = Math.max(0.12, 0.45 - (this.skills.getSkillLevel('fire_rate') - 1) * 0.035);
-                if (this.bullets.length === 0 || this.bullets[this.bullets.length - 1].life > BULLET_LIFE - fireRate - 0.05) {
-                    const dx = nearestZombie.position.x - this.player.position.x, dy = nearestZombie.position.y - this.player.position.y;
-                    const d = Math.sqrt(dx * dx + dy * dy);
-                    if (d > 0)
-                        this.bullets.push({ position: { x: this.player.position.x, y: this.player.position.y }, velocity: { x: (dx / d) * BULLET_SPEED, y: (dy / d) * BULLET_SPEED }, life: BULLET_LIFE });
-                }
+            if (nearestZombie && nearestDist < 400 && this.fireCooldown <= 0) {
+                this.fireCooldown = Math.max(0.12, 0.45 - (this.skills.getSkillLevel('fire_rate') - 1) * 0.035);
+                const dx = nearestZombie.position.x - this.player.position.x, dy = nearestZombie.position.y - this.player.position.y;
+                const d = Math.sqrt(dx * dx + dy * dy);
+                if (d > 0)
+                    this.bullets.push({ position: { x: this.player.position.x, y: this.player.position.y }, velocity: { x: (dx / d) * BULLET_SPEED, y: (dy / d) * BULLET_SPEED }, life: BULLET_LIFE });
             }
             this.bullets.forEach(b => {
                 b.position.x += b.velocity.x * dt;
@@ -324,6 +324,7 @@ export class ZombieCatcherGame {
         this.cardThreshold = CARD_BASE;
         this.spawnTimer = 0;
         this.invuln = 0;
+        this.fireCooldown = 0;
         this.currencies.setData({ soft: 0, hard: 0 });
         this.dpad.show();
         this.adReward.createButton();

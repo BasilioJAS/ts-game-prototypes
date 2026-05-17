@@ -32,7 +32,7 @@ export class ZombieCatcherGame {
   private kills: number = 0; private score: number = 0;
   private cardThreshold: number = CARD_BASE; private lastCardAt: number = 0;
   private decorations: Decoration[] = [];
-  private spawnTimer: number = 0; private invuln: number = 0;
+  private spawnTimer: number = 0; private invuln: number = 0; private fireCooldown: number = 0;
   private shopBtn: HTMLButtonElement | null = null; private shopOverlay: HTMLDivElement | null = null;
 
   constructor() {
@@ -98,6 +98,7 @@ export class ZombieCatcherGame {
     this.player.position = { x: 1200, y: 900 }; this.player.hp = PLAYER_HP;
     this.zombies = []; this.bullets = []; this.kills = 0; this.score = 0;
     this.lastCardAt = 0; this.cardThreshold = CARD_BASE; this.spawnTimer = 0; this.invuln = 0;
+    this.fireCooldown = 0;
     this.currencies.setData({ soft: 0, hard: 0 });
     this.dpad.show(); this.adReward.createButton(); this.adReward.show(); this.createShop();
     this.spawnZombies(INITIAL_ZOMBIES);
@@ -173,6 +174,7 @@ export class ZombieCatcherGame {
     this.player.position.y = Math.max(20, Math.min(WORLD_H - 20, this.player.position.y));
     if (this.invuln > 0) this.invuln -= dt;
 
+    this.fireCooldown -= dt;
     let nearestZombie: Zombie | null = null;
     let nearestDist = Infinity;
     for (const z of this.zombies) {
@@ -180,13 +182,11 @@ export class ZombieCatcherGame {
       const d = Math.sqrt(dx * dx + dy * dy);
       if (d < nearestDist) { nearestDist = d; nearestZombie = z; }
     }
-    if (nearestZombie && nearestDist < 400) {
-      const fireRate = Math.max(0.12, 0.45 - (this.skills.getSkillLevel('fire_rate') - 1) * 0.035);
-      if (this.bullets.length === 0 || this.bullets[this.bullets.length - 1].life > BULLET_LIFE - fireRate - 0.05) {
-        const dx = nearestZombie.position.x - this.player.position.x, dy = nearestZombie.position.y - this.player.position.y;
-        const d = Math.sqrt(dx * dx + dy * dy);
-        if (d > 0) this.bullets.push({ position: { x: this.player.position.x, y: this.player.position.y }, velocity: { x: (dx / d) * BULLET_SPEED, y: (dy / d) * BULLET_SPEED }, life: BULLET_LIFE });
-      }
+    if (nearestZombie && nearestDist < 400 && this.fireCooldown <= 0) {
+      this.fireCooldown = Math.max(0.12, 0.45 - (this.skills.getSkillLevel('fire_rate') - 1) * 0.035);
+      const dx = nearestZombie.position.x - this.player.position.x, dy = nearestZombie.position.y - this.player.position.y;
+      const d = Math.sqrt(dx * dx + dy * dy);
+      if (d > 0) this.bullets.push({ position: { x: this.player.position.x, y: this.player.position.y }, velocity: { x: (dx / d) * BULLET_SPEED, y: (dy / d) * BULLET_SPEED }, life: BULLET_LIFE });
     }
 
     this.bullets.forEach(b => {
