@@ -13,6 +13,6 @@
     "sourceMap": false,
     "noEmitOnError": true
   },
-  "include": ["shared/**/*.ts", "butterfly-catcher/**/*.ts"],
+  "include": ["shared/**/*.ts", "butterfly-catcher/**/*.ts", "zombie-catcher/**/*.ts", "fishing-game/**/*.ts"],
   "exclude": ["node_modules"]
 }
