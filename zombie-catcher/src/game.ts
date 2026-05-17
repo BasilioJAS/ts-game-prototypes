@@ -111,7 +111,7 @@ export class ZombieCatcherGame {
       else if (side === 1) { x = WORLD_W; y = Math.random() * WORLD_H; }
       else if (side === 2) { x = Math.random() * WORLD_W; y = WORLD_H; }
       else { x = 0; y = Math.random() * WORLD_H; }
-      this.zombies.push({ id: `z_${Date.now()}_${i}`, position: { x, y }, velocity: { x: 0, y: 0 }, hp: 20 + Math.floor(this.elapsed / 60) * 5, maxHp: 20 + Math.floor(this.elapsed / 60) * 5, speed: 30 + Math.random() * 20, damage: ZOMBIE_DAMAGE, size: 12 + Math.random() * 8, killed: false, attackTimer: 0, state: 'idle' });
+      this.zombies.push({ id: `z_${Date.now()}_${i}`, position: { x, y }, velocity: { x: 0, y: 0 }, hp: 15 + Math.floor(this.elapsed / 60) * 5, maxHp: 15 + Math.floor(this.elapsed / 60) * 5, speed: 60 + Math.random() * 30, damage: ZOMBIE_DAMAGE, size: 12 + Math.random() * 8, killed: false, attackTimer: 0, state: 'idle' });
     }
   }
 
@@ -173,15 +173,19 @@ export class ZombieCatcherGame {
     this.player.position.y = Math.max(20, Math.min(WORLD_H - 20, this.player.position.y));
     if (this.invuln > 0) this.invuln -= dt;
 
-    const mouse = this.input.mousePosition;
-    if (this.input.mouseDown) {
-      const mdx = mouse.x - this.player.position.x, mdy = mouse.y - this.player.position.y;
-      const md = Math.sqrt(mdx * mdx + mdy * mdy);
-      if (md > 0) {
-        const fireRate = Math.max(0.15, 0.5 - (this.skills.getSkillLevel('fire_rate') - 1) * 0.04);
-        if (this.bullets.length === 0 || this.bullets[this.bullets.length - 1].life > BULLET_LIFE - fireRate - 0.05) {
-          this.bullets.push({ position: { x: this.player.position.x, y: this.player.position.y }, velocity: { x: (mdx / md) * BULLET_SPEED, y: (mdy / md) * BULLET_SPEED }, life: BULLET_LIFE });
-        }
+    let nearestZombie: Zombie | null = null;
+    let nearestDist = Infinity;
+    for (const z of this.zombies) {
+      const dx = z.position.x - this.player.position.x, dy = z.position.y - this.player.position.y;
+      const d = Math.sqrt(dx * dx + dy * dy);
+      if (d < nearestDist) { nearestDist = d; nearestZombie = z; }
+    }
+    if (nearestZombie && nearestDist < 400) {
+      const fireRate = Math.max(0.12, 0.45 - (this.skills.getSkillLevel('fire_rate') - 1) * 0.035);
+      if (this.bullets.length === 0 || this.bullets[this.bullets.length - 1].life > BULLET_LIFE - fireRate - 0.05) {
+        const dx = nearestZombie.position.x - this.player.position.x, dy = nearestZombie.position.y - this.player.position.y;
+        const d = Math.sqrt(dx * dx + dy * dy);
+        if (d > 0) this.bullets.push({ position: { x: this.player.position.x, y: this.player.position.y }, velocity: { x: (dx / d) * BULLET_SPEED, y: (dy / d) * BULLET_SPEED }, life: BULLET_LIFE });
       }
     }
 
@@ -195,19 +199,14 @@ export class ZombieCatcherGame {
       const pdx = this.player.position.x - z.position.x, pdy = this.player.position.y - z.position.y;
       const dist = Math.sqrt(pdx * pdx + pdy * pdy);
       if (z.attackTimer > 0) z.attackTimer -= dt;
-
-      if (dist < 250) {
-        z.state = 'chase';
-        if (dist > 1) { z.velocity.x = (pdx / dist) * z.speed; z.velocity.y = (pdy / dist) * z.speed; }
-        if (dist < 20 && this.invuln <= 0) {
-          this.player.hp = Math.max(0, this.player.hp - z.damage);
-          this.invuln = 0.5;
-          z.attackTimer = 2;
-          if (this.player.hp <= 0) this.respawn();
-        }
-      } else {
-        z.state = 'idle';
-        if (Math.random() < 0.02) { z.velocity.x = (Math.random() - 0.5) * 40; z.velocity.y = (Math.random() - 0.5) * 40; }
+      z.state = 'chase';
+      const chaseSpeed = (dist > 300 ? 0.5 : 1) * z.speed;
+      if (dist > 1) { z.velocity.x = (pdx / dist) * chaseSpeed; z.velocity.y = (pdy / dist) * chaseSpeed; }
+      if (dist < 20 && this.invuln <= 0) {
+        this.player.hp = Math.max(0, this.player.hp - z.damage);
+        this.invuln = 0.5;
+        z.attackTimer = 2;
+        if (this.player.hp <= 0) this.respawn();
       }
       z.position.x += z.velocity.x * dt; z.position.y += z.velocity.y * dt;
       z.position.x = Math.max(0, Math.min(WORLD_W, z.position.x));
@@ -318,6 +317,6 @@ export class ZombieCatcherGame {
     if (a) { this.renderer.drawRect(rx, 126, 120, 12, '#4a5568'); this.renderer.drawRect(rx, 126, 120 * a.progress, 12, '#4299e1'); this.renderer.drawText(`${a.name} ${Math.floor(a.progress * 100)}%`, rx + 2, 135, 'white', 9); }
     else { const allR = this.research.getAllResearch(); const d = allR.filter(r => r.completed).length; this.renderer.drawText(d < allR.length ? `R&D: ${d}/${allR.length}` : 'All done!', rx, 126, d < allR.length ? '#a0aec0' : '#48bb78', 11); }
 
-    this.renderer.drawText('Click to shoot. WASD/D-Pad to move.', 8, 102, '#a0aec0', 11);
+    this.renderer.drawText('Auto-fire at nearest zombie. Move with WASD/D-Pad.', 8, 102, '#a0aec0', 10);
   };
 }
